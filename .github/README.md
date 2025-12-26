@@ -22,10 +22,11 @@ Automated testing and deployment workflows for the AI Newsletter Digest.
 2. Builds Docker image (tagged with commit SHA and `latest`)
 3. Pushes to Google Container Registry
 4. Updates Cloud Run Job with new image
-5. Executes job to test deployment
-6. Notifies deployment status
+5. Notifies deployment status
 
 **Purpose:** Automatically deploy to production when code is pushed to main
+
+**Note:** Deployment does not execute the job (to save API credits). The scheduled Cloud Scheduler job will run at the configured time.
 
 ## Setup
 
@@ -106,10 +107,9 @@ graph LR
     C -->|Yes| E[Build Docker image]
     E --> F[Push to GCR]
     F --> G[Update Cloud Run Job]
-    G --> H[Test deployment]
-    H --> I{Deploy success?}
-    I -->|Yes| J[Notify success]
-    I -->|No| K[Notify failure]
+    G --> H{Deploy success?}
+    H -->|Yes| I[Notify success]
+    H -->|No| J[Notify failure]
 ```
 
 ## Workflows in Action

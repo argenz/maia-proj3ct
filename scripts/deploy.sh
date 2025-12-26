@@ -60,18 +60,19 @@ fi
 
 echo "✓ Cloud Run Job deployed"
 
-# Execute job to test
-echo ""
-echo "→ Testing job execution..."
-$GCLOUD run jobs execute $JOB_NAME --region $REGION --wait
-
 echo ""
 echo "=== Deployment Complete! ==="
+echo ""
+echo "📝 Note: The job will run automatically via Cloud Scheduler"
+echo "   Manual test runs will consume API credits"
 echo ""
 echo "View logs:"
 echo "  $GCLOUD logging read \"resource.type=cloud_run_job AND resource.labels.job_name=$JOB_NAME\" --limit 50"
 echo ""
-echo "Manually trigger:"
+echo "Manually trigger (preview mode - no email):"
+echo "  $GCLOUD run jobs execute $JOB_NAME --region $REGION --args=\"--preview\""
+echo ""
+echo "Manually trigger (full run - SENDS EMAIL):"
 echo "  $GCLOUD run jobs execute $JOB_NAME --region $REGION"
 echo ""
 echo "View in console:"

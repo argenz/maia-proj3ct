@@ -80,12 +80,6 @@ jobs:
             --region ${{ env.REGION }} \
             --image gcr.io/${{ env.PROJECT_ID }}/${{ env.JOB_NAME }}:${{ github.sha }}
 
-      - name: Test deployment
-        run: |
-          gcloud run jobs execute ${{ env.JOB_NAME }} \
-            --region ${{ env.REGION }} \
-            --wait
-
   notify:
     name: Notify Deployment Status
     runs-on: ubuntu-latest
