@@ -1,0 +1,39 @@
+# Virtual environment
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Git
+.git/
+.gitignore
+
+# Environment files
+.env
+.env.example
+
+# OAuth credentials (use Secret Manager in Cloud)
+credentials.json
+token.json
+
+# Documentation
+README.md
+IMPLEMENTATION_PLAN.md
+
+# Scripts (not needed in container)
+scripts/
+
+# Tests
+tests/
+
+# IDE
+.vscode/
+.idea/
+
+# Other
+*.log
+.DS_Store
