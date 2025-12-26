@@ -1,0 +1,23 @@
+schedule:
+  timezone: "America/New_York"
+  hour: 7
+  minute: 0
+
+# Gmail accounts configured via environment variables:
+# GMAIL_NEWSLETTER_ACCOUNT - account that receives newsletters
+# GMAIL_DIGEST_RECIPIENT - account that receives the daily digest
+
+newsletters:
+  allowed_senders:
+    - "@substack.com"
+    - "newsletter@aiweekly.co"
+    - "digest@therundown.ai"
+
+summarization:
+  model: "claude-sonnet-4-20250514"
+  categories:
+    - "Papers"
+    - "News"
+    - "Tools"
+    - "Industry Updates"
+  max_items_per_category: 5
