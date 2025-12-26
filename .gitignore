@@ -1,5 +1,8 @@
 # Implementation plan (private)
 IMPLEMENTATION_PLAN.md
+DEPLOYMENT.md
+QUICKSTART_DEPLOY.md
+deploy.sh.old
 
 # Virtual environment
 venv/

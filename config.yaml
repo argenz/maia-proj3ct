@@ -1,3 +1,9 @@
+# Google Cloud Configuration
+deployment:
+  project_id: "maia-proj3ct"
+  region: "us-central1"
+
+# Schedule Configuration
 schedule:
   timezone: "America/New_York"
   hour: 7
