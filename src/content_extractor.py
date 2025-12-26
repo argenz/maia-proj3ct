@@ -1,9 +1,12 @@
 """Content extraction from newsletter emails."""
 
 import re
+import logging
 from typing import Dict, List, Optional
 from bs4 import BeautifulSoup
 from readability import Document
+
+logger = logging.getLogger(__name__)
 
 
 class ContentExtractor:
@@ -71,7 +74,7 @@ class ContentExtractor:
             }
 
         except Exception as e:
-            print(f"Warning: Failed to extract HTML content: {e}")
+            logger.warning(f"Failed to extract HTML content: {e}")
             # Fallback to basic extraction
             return self._basic_html_extract(html, email_data)
 

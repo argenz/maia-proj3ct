@@ -1,12 +1,15 @@
 """Email sending functionality for the digest."""
 
 import base64
+import logging
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Dict, List
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+
+logger = logging.getLogger(__name__)
 
 
 class EmailSender:
@@ -176,13 +179,13 @@ class EmailSender:
             subject: Email subject
             body: Email body (plain text)
         """
-        print("\n" + "=" * 70)
-        print("EMAIL PREVIEW")
-        print("=" * 70)
-        print(f"Subject: {subject}")
-        print("=" * 70)
-        print(body)
-        print("=" * 70 + "\n")
+        logger.info("\n" + "=" * 70)
+        logger.info("EMAIL PREVIEW")
+        logger.info("=" * 70)
+        logger.info(f"Subject: {subject}")
+        logger.info("=" * 70)
+        logger.info(body)
+        logger.info("=" * 70 + "\n")
 
     def _send_email(self, to_email: str, subject: str, html_body: str, text_body: str):
         """Send email via Gmail API.
@@ -215,7 +218,8 @@ class EmailSender:
                 body={'raw': raw_message}
             ).execute()
 
-            print(f"✓ Digest email sent to {to_email}")
+            logger.info(f"Digest email sent to {to_email}")
 
         except Exception as e:
+            logger.error(f"Failed to send email: {e}")
             raise RuntimeError(f"Failed to send email: {e}")

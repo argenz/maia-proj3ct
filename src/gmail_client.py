@@ -1,11 +1,14 @@
 """Gmail API client for fetching and managing newsletter emails."""
 
 import base64
+import logging
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
+logger = logging.getLogger(__name__)
 
 
 class GmailClient:
@@ -39,9 +42,10 @@ class GmailClient:
 
             # Build Gmail API service
             self.service = build('gmail', 'v1', credentials=creds)
-            print("✓ Gmail API authentication successful")
+            logger.info("Gmail API authentication successful")
 
         except Exception as e:
+            logger.error(f"Failed to authenticate with Gmail API: {e}")
             raise RuntimeError(f"Failed to authenticate with Gmail API: {e}")
 
     def fetch_unread_emails(
@@ -66,7 +70,7 @@ class GmailClient:
             # Build query: unread emails from last N hours
             query = f"is:unread after:{after_timestamp}"
 
-            print(f"Fetching unread emails from last {hours} hours...")
+            logger.info(f"Fetching unread emails from last {hours} hours...")
 
             # List messages matching query
             results = self.service.users().messages().list(
@@ -77,10 +81,10 @@ class GmailClient:
             messages = results.get('messages', [])
 
             if not messages:
-                print("No unread emails found")
+                logger.info("No unread emails found")
                 return []
 
-            print(f"Found {len(messages)} unread emails, filtering by allowed senders...")
+            logger.info(f"Found {len(messages)} unread emails, filtering by allowed senders...")
 
             # Fetch full details for each message
             emails = []
@@ -91,12 +95,14 @@ class GmailClient:
                 if email_data and self._is_allowed_sender(email_data['from'], allowed_senders):
                     emails.append(email_data)
 
-            print(f"✓ Filtered to {len(emails)} newsletter emails")
+            logger.info(f"Filtered to {len(emails)} newsletter emails")
             return emails
 
         except HttpError as e:
             if e.resp.status == 401:
+                logger.error("Gmail API authentication failed. Token may be expired.")
                 raise RuntimeError("Gmail API authentication failed. Token may be expired.")
+            logger.error(f"Gmail API error: {e}")
             raise RuntimeError(f"Gmail API error: {e}")
 
     def _get_email_details(self, message_id: str) -> Optional[Dict[str, Any]]:
@@ -136,7 +142,7 @@ class GmailClient:
             }
 
         except Exception as e:
-            print(f"Warning: Failed to fetch email {message_id}: {e}")
+            logger.warning(f"Failed to fetch email {message_id}: {e}")
             return None
 
     def _get_header(self, headers: List[Dict], name: str) -> str:
@@ -207,7 +213,7 @@ class GmailClient:
                 }
             ).execute()
 
-            print(f"✓ Marked {len(message_ids)} emails as read")
+            logger.info(f"Marked {len(message_ids)} emails as read")
 
         except HttpError as e:
-            print(f"Warning: Failed to mark emails as read: {e}")
+            logger.warning(f"Failed to mark emails as read: {e}")

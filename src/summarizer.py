@@ -1,8 +1,11 @@
 """AI-powered summarization using Claude API."""
 
 import json
+import logging
 from typing import List, Dict, Any
 from anthropic import Anthropic
+
+logger = logging.getLogger(__name__)
 
 
 class Summarizer:
@@ -37,7 +40,7 @@ class Summarizer:
         if not newsletter_items:
             return {category: [] for category in categories}
 
-        print(f"Summarizing {len(newsletter_items)} newsletter items with Claude...")
+        logger.info(f"Summarizing {len(newsletter_items)} newsletter items with Claude...")
 
         # Prepare content for Claude
         newsletters_text = self._format_newsletters(newsletter_items)
@@ -63,11 +66,11 @@ class Summarizer:
             # Extract JSON from response
             digest = self._parse_response(result_text, categories)
 
-            print(f"✓ Summarization complete")
+            logger.info("Summarization complete")
             return digest
 
         except Exception as e:
-            print(f"Error during summarization: {e}")
+            logger.error(f"Error during summarization: {e}")
             raise RuntimeError(f"Failed to summarize content: {e}")
 
     def _format_newsletters(self, items: List[Dict]) -> str:
@@ -183,8 +186,8 @@ Please provide the digest in valid JSON format only, no additional text."""
             return result
 
         except json.JSONDecodeError as e:
-            print(f"Failed to parse JSON response: {e}")
-            print(f"Response: {response_text[:500]}")
+            logger.error(f"Failed to parse JSON response: {e}")
+            logger.debug(f"Response: {response_text[:500]}")
 
             # Return empty digest if parsing fails
             return {category: [] for category in categories}

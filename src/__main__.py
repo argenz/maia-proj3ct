@@ -3,6 +3,7 @@
 import sys
 import argparse
 import unittest
+import logging
 from pathlib import Path
 from datetime import datetime
 from src.config import Config
@@ -11,13 +12,14 @@ from src.content_extractor import ContentExtractor
 from src.summarizer import Summarizer
 from src.email_sender import EmailSender
 
+logger = logging.getLogger(__name__)
+
 
 def run_tests():
     """Run unit and component tests."""
-    print("=" * 70)
-    print("RUNNING UNIT AND COMPONENT TESTS")
-    print("=" * 70)
-    print()
+    logger.info("=" * 70)
+    logger.info("RUNNING UNIT AND COMPONENT TESTS")
+    logger.info("=" * 70)
 
     # Discover and run all tests
     loader = unittest.TestLoader()
@@ -28,15 +30,15 @@ def run_tests():
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
 
-    print()
-    print("=" * 70)
+    logger.info("")
+    logger.info("=" * 70)
     if result.wasSuccessful():
-        print("✓ ALL TESTS PASSED")
-        print("=" * 70)
+        logger.info("✓ ALL TESTS PASSED")
+        logger.info("=" * 70)
         return 0
     else:
-        print("✗ SOME TESTS FAILED")
-        print("=" * 70)
+        logger.error("✗ SOME TESTS FAILED")
+        logger.info("=" * 70)
         return 1
 
 
@@ -57,6 +59,14 @@ def main():
 
     args = parser.parse_args()
 
+    # Setup logging
+    log_level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
     # Run tests if --test flag is set
     if args.test:
         return run_tests()
@@ -64,50 +74,50 @@ def main():
     # Enable preview mode if dry-run is set
     preview_mode = args.dry_run or args.preview
 
-    print("=" * 70)
-    print("AI NEWSLETTER DIGEST")
-    print("=" * 70)
-    print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("=" * 70)
+    logger.info("AI NEWSLETTER DIGEST")
+    logger.info("=" * 70)
+    logger.info(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     if preview_mode:
-        print("Mode: PREVIEW (no email will be sent)")
-    print("=" * 70 + "\n")
+        logger.info("Mode: PREVIEW (no email will be sent)")
+    logger.info("=" * 70 + "\n")
+
+    logger.info("Starting newsletter digest workflow")
 
     try:
         # 1. Load configuration
-        print("→ Loading configuration...")
+        logger.info("→ Loading configuration...")
         config = Config()
-        print("✓ Configuration loaded\n")
+        logger.info("✓ Configuration loaded\n")
 
         # 2. Initialize Gmail client
-        print("→ Connecting to Gmail API...")
+        logger.info("→ Connecting to Gmail API...")
         gmail_client = GmailClient(
             refresh_token=config.gmail_refresh_token,
             client_id=config.gmail_client_id,
             client_secret=config.gmail_client_secret
         )
-        print()
 
         # 3. Fetch unread newsletters
-        print(f"→ Fetching newsletters from last {args.hours} hours...")
+        logger.info(f"→ Fetching newsletters from last {args.hours} hours...")
         emails = gmail_client.fetch_unread_emails(
             allowed_senders=config.allowed_senders,
             hours=args.hours
         )
 
         if not emails:
-            print("\n✓ No newsletters to process. Exiting.")
+            logger.info("\n✓ No newsletters to process. Exiting.")
             return 0
 
-        print(f"✓ Found {len(emails)} newsletters to process\n")
+        logger.info(f"✓ Found {len(emails)} newsletters to process\n")
 
-        if args.debug:
-            print("DEBUG: Email subjects:")
-            for email in emails:
-                print(f"  - {email.get('subject', 'No subject')}")
-            print()
+        logger.debug("DEBUG: Email subjects:")
+        for email in emails:
+            logger.debug(f"  - {email.get('subject', 'No subject')}")
+        logger.debug("")
 
         # 4. Extract content from emails
-        print("→ Extracting content...")
+        logger.info("→ Extracting content...")
         extractor = ContentExtractor()
         extracted_items = []
 
@@ -115,19 +125,18 @@ def main():
             try:
                 content = extractor.extract(email)
                 extracted_items.append(content)
-                if args.debug:
-                    print(f"  ✓ Extracted: {content.get('title', 'Untitled')[:60]}")
+                logger.debug(f"  ✓ Extracted: {content.get('title', 'Untitled')[:60]}")
             except Exception as e:
-                print(f"  ⚠ Failed to extract from '{email.get('subject', 'Unknown')}': {e}")
+                logger.warning(f"Failed to extract from '{email.get('subject', 'Unknown')}': {e}")
 
-        print(f"✓ Extracted content from {len(extracted_items)} newsletters\n")
+        logger.info(f"✓ Extracted content from {len(extracted_items)} newsletters\n")
 
         if not extracted_items:
-            print("✗ No content extracted. Exiting.")
+            logger.error("✗ No content extracted. Exiting.")
             return 1
 
         # 5. Summarize with Claude
-        print("→ Generating AI summary...")
+        logger.info("→ Generating AI summary...")
         summarizer = Summarizer(
             api_key=config.anthropic_api_key,
             model=config.model
@@ -138,20 +147,17 @@ def main():
             categories=config.categories,
             max_items_per_category=config.max_items_per_category
         )
-        print()
 
         # Count total items in digest
         total_items = sum(len(items) for items in digest_data.values())
-        print(f"✓ Digest contains {total_items} items across {len(config.categories)} categories\n")
+        logger.info(f"✓ Digest contains {total_items} items across {len(config.categories)} categories\n")
 
-        if args.debug:
-            print("DEBUG: Items per category:")
-            for category, items in digest_data.items():
-                print(f"  - {category}: {len(items)} items")
-            print()
+        logger.debug("DEBUG: Items per category:")
+        for category, items in digest_data.items():
+            logger.debug(f"  - {category}: {len(items)} items")
 
         # 6. Send digest email
-        print("→ Preparing digest email...")
+        logger.info("→ Preparing digest email...")
         email_sender = EmailSender(
             refresh_token=config.gmail_refresh_token,
             client_id=config.gmail_client_id,
@@ -165,35 +171,33 @@ def main():
             total_newsletters=len(emails),
             preview_only=preview_mode
         )
-        print()
 
         # 7. Mark emails as read (only if not in preview mode)
         if not preview_mode:
-            print("→ Marking newsletters as read...")
+            logger.info("→ Marking newsletters as read...")
+            logger.info("Marking newsletters as read")
             email_ids = [email['id'] for email in emails]
             gmail_client.mark_as_read(email_ids)
-            print()
+            logger.info("")
 
         # Done
-        print("=" * 70)
-        print("✓ COMPLETED SUCCESSFULLY")
-        print("=" * 70)
-        print(f"Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"Processed: {len(emails)} newsletters")
-        print(f"Digest items: {total_items}")
-        print("=" * 70)
+        logger.info("=" * 70)
+        logger.info("✓ COMPLETED SUCCESSFULLY")
+        logger.info("=" * 70)
+        logger.info(f"Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info(f"Processed: {len(emails)} newsletters")
+        logger.info(f"Digest items: {total_items}")
+        logger.info("=" * 70)
 
+        logger.info(f"Workflow completed successfully. Processed {len(emails)} newsletters, generated {total_items} digest items")
         return 0
 
     except KeyboardInterrupt:
-        print("\n\n✗ Interrupted by user")
+        logger.warning("\n\n✗ Interrupted by user")
         return 130
 
     except Exception as e:
-        print(f"\n✗ ERROR: {e}")
-        if args.debug:
-            import traceback
-            traceback.print_exc()
+        logger.error(f"\n✗ ERROR: {e}", exc_info=args.debug)
         return 1
 
 
