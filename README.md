@@ -9,7 +9,6 @@ A serverless system that aggregates AI newsletters from a dedicated Gmail inbox,
 | **Problem** | Keeping up with multiple AI newsletters is time-consuming |
 | **Solution** | Automated daily digest with AI-powered summarization |
 | **Platform** | Google Cloud Run Jobs |
-| **Cost** | ~$0/month (within free tier) |
 
 ## Architecture
 
@@ -76,21 +75,32 @@ A serverless system that aggregates AI newsletters from a dedicated Gmail inbox,
 ## Project Structure
 
 ```
-newsletter-digest/
+maia-proj3ct/
 ├── src/
+│   ├── __init__.py
 │   ├── __main__.py          # Entry point
+│   ├── config.py            # Configuration management
 │   ├── gmail_client.py      # Gmail API integration
 │   ├── content_extractor.py # Newsletter parsing
 │   ├── summarizer.py        # Claude API summarization
-│   ├── email_sender.py      # Digest email composition
-│   └── config.py            # Configuration management
-├── Dockerfile
-├── requirements.txt
-├── config.yaml              # Newsletter sources, schedule, preferences
+│   └── email_sender.py      # Digest email composition
+├── tests/
+├── scripts/                 # Setup and Deployment Scripts
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml       # CI/CD pipeline
-└── README.md
+│       ├── ci.yml           # Continuous Integration
+│       └── deploy.yml       # Continuous Deployment
+├── .env.example             # Template for environment variables
+├── Dockerfile
+├── Makefile                 # Deployment commands (make deploy, make setup-secrets, etc.)
+├── README.md
+├── config.yaml              # Newsletter sources, schedule, preferences
+└── requirements.txt         # Python dependencies
+
+# Generated during setup (not in git):
+├── .env                     # Environment variables (OAuth tokens, API keys)
+├── credentials.json         # Gmail OAuth credentials
+└── token.json               # Gmail OAuth refresh token
 ```
 
 ## Configuration
@@ -108,9 +118,7 @@ gmail:
   
 newsletters:
   allowed_senders:
-    - "@substack.com"
-    - "newsletter@aiweekly.co"
-    - "digest@therundown.ai"
+    - "@..."
 
 summarization:
   model: "claude-sonnet-4-20250514"
@@ -122,48 +130,71 @@ summarization:
   max_items_per_category: 5
 ```
 
-## Setup
-
-### Prerequisites
+## Prerequisites
 
 - Google Cloud account with billing enabled
-- Gmail account for newsletters
-- Anthropic API key
+- New Gmail account for receiving newsletters
+- Anthropic API key ([get one here](https://console.anthropic.com/))
 - Docker installed locally
-- gcloud CLI installed
+- gcloud CLI ([installation guide](https://cloud.google.com/sdk/docs/install))
 
-### 1. Google Cloud Setup
+### gcloud Setup
 
 ```bash
-# Set project
-gcloud config set project YOUR_PROJECT_ID
+# Install gcloud CLI
+brew install --cask google-cloud-sdk  # macOS
+# For Linux/Windows: see https://cloud.google.com/sdk/docs/install
 
-# Enable required APIs
-gcloud services enable \
-  run.googleapis.com \
-  cloudscheduler.googleapis.com \
-  secretmanager.googleapis.com \
-  gmail.googleapis.com
+# Initialize and authenticate
+gcloud init
+gcloud auth login
+gcloud auth application-default login
+
+# Set your project and enable required APIs
+gcloud config set project YOUR_PROJECT_ID
+gcloud services enable run.googleapis.com cloudscheduler.googleapis.com secretmanager.googleapis.com gmail.googleapis.com
 ```
 
-### 2. Gmail OAuth Setup
+## Quick Start
+
+**Automated deployment** (recommended):
 
 ```bash
-# Run local OAuth flow (one-time)
+# 1. Set up Gmail OAuth (opens browser)
 python scripts/oauth_setup.py
 
-# Store refresh token in Secret Manager
-gcloud secrets create gmail-refresh-token \
-  --data-file=token.json
+# 2. Store secrets in Secret Manager
+make setup-secrets
+
+# 3. Deploy to Cloud Run
+make deploy
+
+# 4. Configure daily schedule
+make setup-scheduler
 ```
 
-### 3. Store Anthropic API Key
-
+**Update after code changes:**
 ```bash
-echo -n "your-api-key" | gcloud secrets create anthropic-api-key --data-file=-
+make deploy
 ```
 
-### 4. Deploy
+## Deployment
+
+### Automated Scripts (Recommended)
+
+The `scripts/` directory contains automated deployment tools:
+
+| Script | Purpose | When to Run |
+|--------|---------|-------------|
+| `oauth_setup.py` | Gmail OAuth setup | Once (initial setup) |
+| `setup-secrets.sh` | Create secrets in Secret Manager | Once (initial setup) |
+| `deploy.sh` | Build & deploy to Cloud Run | Every code update |
+| `setup-scheduler.sh` | Configure Cloud Scheduler | Once (initial setup) |
+| `setup-github-actions.sh` | GitHub Actions service account | Once (if using CI/CD) |
+
+### Manual Deployment (Alternative)
+
+If you prefer manual control:
 
 ```bash
 # Build and push container
@@ -173,12 +204,9 @@ gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/newsletter-digest
 gcloud run jobs create newsletter-digest \
   --image gcr.io/YOUR_PROJECT_ID/newsletter-digest \
   --region us-central1 \
-  --memory 512Mi \
-  --cpu 1 \
-  --max-retries 1 \
-  --task-timeout 10m
+  --memory 512Mi --cpu 1 --max-retries 1 --task-timeout 10m
 
-# Create Cloud Scheduler trigger
+# Create Cloud Scheduler trigger (daily 7 AM)
 gcloud scheduler jobs create http newsletter-digest-trigger \
   --location us-central1 \
   --schedule "0 7 * * *" \
@@ -187,6 +215,28 @@ gcloud scheduler jobs create http newsletter-digest-trigger \
   --http-method POST \
   --oauth-service-account-email YOUR_PROJECT_ID@appspot.gserviceaccount.com
 ```
+
+### Manual Commands
+
+```bash
+# Trigger job manually
+gcloud run jobs execute newsletter-digest --region us-central1
+
+# View scheduler status
+gcloud scheduler jobs describe newsletter-digest-trigger --location us-central1
+
+# View logs
+gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=newsletter-digest" --limit 50
+```
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "Secret already exists" | Normal - scripts update existing secrets |
+| "Permission denied" | Run `chmod +x scripts/*.sh` |
+| "Project not found" | Update `project_id` in `config.yaml` |
+| OAuth token expired | Re-run `python scripts/oauth_setup.py` |
 
 ## Local Development
 
@@ -197,12 +247,57 @@ pip install -r requirements.txt
 # Run locally
 python -m src
 
-# Run with dry-run (no email sent)
+# Dry-run (no email sent)
 python -m src --dry-run
 
 # Preview digest in terminal
 python -m src --preview
 ```
+
+## CI/CD with GitHub Actions
+
+Automated workflows in `.github/workflows/`:
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ci.yml` | Push to non-main branches, PRs | Run tests and build validation |
+| `deploy.yml` | Push to `main` | Auto-deploy to Cloud Run |
+
+### Setup
+
+```bash
+# 1. Complete initial deployment
+make setup-secrets && make deploy && make setup-scheduler
+
+# 2. Create GitHub Actions service account
+make setup-github-actions
+
+# 3. Add GCP_SA_KEY secret to GitHub
+# Copy: cat github-actions-key.json
+# Go to: Settings → Secrets → Actions → New secret
+# Name: GCP_SA_KEY
+# Value: Paste JSON key
+# Then: rm github-actions-key.json
+```
+
+### Usage
+
+Push to `main` branch to trigger automatic deployment:
+```bash
+git push origin main
+```
+
+Check workflow status at: `https://github.com/YOUR_USERNAME/maia-proj3ct/actions`
+
+**Note:** Auto-deployment only updates the Cloud Run Job image. The job still runs on its scheduled time (to save API credits).
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "Invalid credentials" | Re-run `make setup-github-actions` and update `GCP_SA_KEY` secret |
+| "Permission denied" | Re-run `make setup-github-actions` |
+| Job execution fails | Verify secrets: `gcloud secrets list` |
 
 ## Cost Estimate
 
