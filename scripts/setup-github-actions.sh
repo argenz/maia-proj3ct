@@ -38,7 +38,8 @@ echo "→ Granting required permissions..."
 for role in \
   roles/run.admin \
   roles/iam.serviceAccountUser \
-  roles/storage.admin
+  roles/storage.admin \
+  roles/artifactregistry.writer
 do
   gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:${SA_EMAIL}" \
