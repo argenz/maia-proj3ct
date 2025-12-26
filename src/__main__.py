@@ -2,12 +2,42 @@
 
 import sys
 import argparse
+import unittest
+from pathlib import Path
 from datetime import datetime
 from src.config import Config
 from src.gmail_client import GmailClient
 from src.content_extractor import ContentExtractor
 from src.summarizer import Summarizer
 from src.email_sender import EmailSender
+
+
+def run_tests():
+    """Run unit and component tests."""
+    print("=" * 70)
+    print("RUNNING UNIT AND COMPONENT TESTS")
+    print("=" * 70)
+    print()
+
+    # Discover and run all tests
+    loader = unittest.TestLoader()
+    tests_dir = Path(__file__).parent.parent / 'tests'
+    suite = loader.discover(tests_dir, pattern='test_*.py')
+
+    # Run tests
+    runner = unittest.TextTestRunner(verbosity=2)
+    result = runner.run(suite)
+
+    print()
+    print("=" * 70)
+    if result.wasSuccessful():
+        print("✓ ALL TESTS PASSED")
+        print("=" * 70)
+        return 0
+    else:
+        print("✗ SOME TESTS FAILED")
+        print("=" * 70)
+        return 1
 
 
 def main():
@@ -20,10 +50,16 @@ def main():
                        help='Print digest to console instead of sending')
     parser.add_argument('--debug', action='store_true',
                        help='Enable debug output')
+    parser.add_argument('--test', action='store_true',
+                       help='Run unit and component tests')
     parser.add_argument('--hours', type=int, default=24,
                        help='Fetch emails from last N hours (default: 24)')
 
     args = parser.parse_args()
+
+    # Run tests if --test flag is set
+    if args.test:
+        return run_tests()
 
     # Enable preview mode if dry-run is set
     preview_mode = args.dry_run or args.preview
