@@ -16,8 +16,9 @@ schedule:
 newsletters:
   allowed_senders:
     - "@substack.com"
-    - "newsletter@aiweekly.co"
-    - "digest@therundown.ai"
+    - "eugene@eugeneyan.com"
+    - "news@alphasignal.ai"
+    - "@tldrnewsletter.com"
 
 summarization:
   model: "claude-sonnet-4-20250514"
