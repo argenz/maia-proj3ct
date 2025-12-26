@@ -7,6 +7,10 @@ venv/
 # Environment variables
 .env
 
+# OAuth credentials
+credentials.json
+token.json
+
 # Python cache
 __pycache__/
 *.pyc
