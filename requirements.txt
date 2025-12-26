@@ -12,3 +12,6 @@ google-api-python-client>=2.0.0
 beautifulsoup4>=4.12.0
 lxml>=5.0.0
 readability-lxml>=0.8.0
+
+# AI/LLM
+anthropic>=0.40.0
