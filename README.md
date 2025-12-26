@@ -10,6 +10,36 @@ A serverless system that aggregates AI newsletters from a dedicated Gmail inbox,
 | **Solution** | Automated daily digest with AI-powered summarization |
 | **Platform** | Google Cloud Run Jobs |
 
+## Digest Output Example
+
+```
+═══════════════════════════════════════════════════════
+   AI DAILY DIGEST — December 26, 2025
+   Processed 8 newsletters
+═══════════════════════════════════════════════════════
+
+📄 TOP PAPERS
+1. [Paper Title] - Brief summary...
+   Source: Newsletter Name | Link
+
+2. [Paper Title] - Brief summary...
+   Source: Newsletter Name | Link
+
+📰 NEWS
+1. [Headline] - Summary...
+   Source: Newsletter Name | Link
+
+🛠️ TOOLS & LAUNCHES
+1. [Tool Name] - Description...
+   Source: Newsletter Name | Link
+
+📊 INDUSTRY UPDATES
+1. [Update] - Summary...
+   Source: Newsletter Name | Link
+
+═══════════════════════════════════════════════════════
+```
+
 ## Architecture
 
 ```
@@ -309,35 +339,6 @@ Check workflow status at: `https://github.com/YOUR_USERNAME/maia-proj3ct/actions
 | Cloud Storage | < 1 MB state file | $0.00 (free tier) |
 | **Total** | | **$0.00** |
 
-## Digest Output Example
-
-```
-═══════════════════════════════════════════════════════
-   AI DAILY DIGEST — December 26, 2025
-   Processed 8 newsletters
-═══════════════════════════════════════════════════════
-
-📄 TOP PAPERS
-1. [Paper Title] - Brief summary...
-   Source: Newsletter Name | Link
-
-2. [Paper Title] - Brief summary...
-   Source: Newsletter Name | Link
-
-📰 NEWS
-1. [Headline] - Summary...
-   Source: Newsletter Name | Link
-
-🛠️ TOOLS & LAUNCHES
-1. [Tool Name] - Description...
-   Source: Newsletter Name | Link
-
-📊 INDUSTRY UPDATES
-1. [Update] - Summary...
-   Source: Newsletter Name | Link
-
-═══════════════════════════════════════════════════════
-```
 
 ## License
 
