@@ -1,27 +1,30 @@
-.PHONY: test build clean install setup-secrets setup-scheduler deploy help
+.PHONY: test build clean install setup-secrets setup-scheduler deploy setup-github-actions help
 
 help:
 	@echo "AI Newsletter Digest - Commands"
 	@echo "================================="
 	@echo ""
 	@echo "Local Development:"
-	@echo "  make install          - Install dependencies"
-	@echo "  make test             - Run unit and component tests"
-	@echo "  make build            - Build Docker image locally"
-	@echo "  make clean            - Clean build artifacts"
+	@echo "  make install             - Install dependencies"
+	@echo "  make test                - Run unit and component tests"
+	@echo "  make build               - Build Docker image locally"
+	@echo "  make clean               - Clean build artifacts"
 	@echo ""
 	@echo "Cloud Deployment:"
-	@echo "  make setup-secrets    - One-time: Create secrets in Secret Manager"
-	@echo "  make deploy           - Deploy application to Cloud Run"
-	@echo "  make setup-scheduler  - One-time: Configure Cloud Scheduler"
+	@echo "  make setup-secrets       - One-time: Create secrets in Secret Manager"
+	@echo "  make deploy              - Deploy application to Cloud Run"
+	@echo "  make setup-scheduler     - One-time: Configure Cloud Scheduler"
+	@echo "  make setup-github-actions - One-time: Setup GitHub Actions CI/CD"
 	@echo ""
 	@echo "First-time deployment:"
 	@echo "  1. make setup-secrets"
 	@echo "  2. make deploy"
 	@echo "  3. make setup-scheduler"
+	@echo "  4. make setup-github-actions  (optional: for auto-deployment)"
 	@echo ""
 	@echo "Regular updates:"
-	@echo "  make deploy"
+	@echo "  Manual: make deploy"
+	@echo "  Auto:   git push (if GitHub Actions configured)"
 
 install:
 	pip install -r requirements.txt
@@ -49,3 +52,6 @@ deploy:
 
 setup-scheduler:
 	@./scripts/setup-scheduler.sh
+
+setup-github-actions:
+	@./scripts/setup-github-actions.sh
