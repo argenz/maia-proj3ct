@@ -1,2 +1,8 @@
 # Implementation plan (private)
 IMPLEMENTATION_PLAN.md
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
