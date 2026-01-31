@@ -165,8 +165,8 @@ def main():
             from_email=config.newsletter_account
         )
 
-        email_sender.send_digest(
-            to_email=config.digest_recipient,
+        email_sender.send_digest_to_recipients(
+            to_emails=config.digest_recipients,
             digest_data=digest_data,
             total_newsletters=len(emails),
             preview_only=preview_mode

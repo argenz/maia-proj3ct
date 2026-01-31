@@ -125,6 +125,55 @@ class TestEmailSender(unittest.TestCase):
         # Verify no email was sent
         mock_service.users().messages().send.assert_not_called()
 
+    @patch('src.email_sender.build')
+    @patch('src.email_sender.Credentials')
+    def test_send_digest_to_multiple_recipients(self, mock_creds, mock_build):
+        """Test sending digest to multiple recipients."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        sender = EmailSender('token', 'client_id', 'secret', 'from@example.com')
+
+        digest_data = {
+            'Papers': [{'title': 'Test', 'summary': 'Summary', 'source': 'Src', 'link': ''}],
+            'News': [],
+            'Tools': [],
+            'Industry Updates': []
+        }
+
+        recipients = ['user1@example.com', 'user2@example.com', 'user3@example.com']
+        
+        sender.send_digest_to_recipients(
+            to_emails=recipients,
+            digest_data=digest_data,
+            total_newsletters=1,
+            preview_only=False
+        )
+
+        # Verify email was sent to each recipient
+        self.assertEqual(mock_service.users().messages().send.call_count, 3)
+
+    @patch('src.email_sender.build')
+    @patch('src.email_sender.Credentials')
+    def test_send_digest_to_recipients_preview_mode(self, mock_creds, mock_build):
+        """Test send_digest_to_recipients in preview mode sends nothing."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        sender = EmailSender('token', 'client_id', 'secret', 'from@example.com')
+
+        digest_data = {'Papers': [], 'News': [], 'Tools': [], 'Industry Updates': []}
+
+        sender.send_digest_to_recipients(
+            to_emails=['a@example.com', 'b@example.com'],
+            digest_data=digest_data,
+            total_newsletters=0,
+            preview_only=True
+        )
+
+        # Verify no email was sent
+        mock_service.users().messages().send.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
