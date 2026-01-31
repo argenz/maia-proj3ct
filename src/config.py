@@ -67,11 +67,24 @@ class Config:
 
     @property
     def digest_recipient(self) -> str:
-        """Get digest recipient email from environment."""
+        """Get primary digest recipient email from environment."""
         recipient = os.getenv('GMAIL_DIGEST_RECIPIENT')
         if not recipient:
             raise ValueError("GMAIL_DIGEST_RECIPIENT environment variable not set")
         return recipient
+
+    @property
+    def digest_recipients(self) -> List[str]:
+        """Get all digest recipient emails from environment.
+        
+        Supports comma-separated list in GMAIL_DIGEST_RECIPIENTS,
+        falls back to single GMAIL_DIGEST_RECIPIENT for backwards compatibility.
+        """
+        recipients = os.getenv('GMAIL_DIGEST_RECIPIENTS')
+        if recipients:
+            return [r.strip() for r in recipients.split(',') if r.strip()]
+        # Fallback to single recipient
+        return [self.digest_recipient]
 
     # Newsletter properties
     @property

@@ -57,10 +57,27 @@ class EmailSender:
         total_newsletters: int,
         preview_only: bool = False
     ):
-        """Send or preview the digest email.
+        """Send or preview the digest email to a single recipient.
 
         Args:
             to_email: Recipient email address
+            digest_data: Categorized and summarized digest data
+            total_newsletters: Number of newsletters processed
+            preview_only: If True, print to console instead of sending
+        """
+        self.send_digest_to_recipients([to_email], digest_data, total_newsletters, preview_only)
+
+    def send_digest_to_recipients(
+        self,
+        to_emails: List[str],
+        digest_data: Dict[str, List[Dict]],
+        total_newsletters: int,
+        preview_only: bool = False
+    ):
+        """Send or preview the digest email to multiple recipients.
+
+        Args:
+            to_emails: List of recipient email addresses
             digest_data: Categorized and summarized digest data
             total_newsletters: Number of newsletters processed
             preview_only: If True, print to console instead of sending
@@ -73,7 +90,8 @@ class EmailSender:
         if preview_only:
             self._print_preview(subject, text_body)
         else:
-            self._send_email(to_email, subject, html_body, text_body)
+            for to_email in to_emails:
+                self._send_email(to_email, subject, html_body, text_body)
 
     def _generate_html(self, digest_data: Dict[str, List[Dict]], total: int) -> str:
         """Generate HTML email body.
