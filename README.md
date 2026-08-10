@@ -1,3 +1,5 @@
+
+
 # AI Newsletter Aggregator
 
 A serverless system that aggregates AI newsletters from a dedicated Gmail inbox, summarizes content using Claude AI, and delivers a consolidated daily digest email.
@@ -54,7 +56,7 @@ A serverless system that aggregates AI newsletters from a dedicated Gmail inbox,
 │                            │  2. Parse newsletter content    │  │
 │                            │  3. Summarize (Claude API)      │  │
 │                            │  4. Send digest email           │  │
-│                            └────────────┬────────────────────┘  │
+│                            └────────────────┬────────────────────┘  │
 │                                         │                       │
 │         ┌───────────────────────────────┼───────────────────┐   │
 │         ▼                               ▼                   ▼   │
@@ -142,10 +144,9 @@ schedule:
   hour: 7
   minute: 0
 
-gmail:
-  newsletter_account: "ai-newsletters@gmail.com"
-  digest_recipient: "your-main@gmail.com"
-  
+# Note: Gmail accounts are configured via environment variables:
+# GMAIL_NEWSLETTER_ACCOUNT and GMAIL_DIGEST_RECIPIENT (see .env.example)
+
 newsletters:
   allowed_senders:
     - "@..."
